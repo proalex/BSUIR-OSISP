@@ -1,9 +1,16 @@
 #include <Windows.h>
 #include <strsafe.h>
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+/*
+Function:  ErrorExit
 
-void ErrorExit(LPTSTR lpszFunction)
+Purpose:   Print WINAPI error message and exit from current process
+
+Input:     LPSTR lpszFunction - name of the function that cause error
+
+Output:    VOID
+*/
+VOID ErrorExit(LPTSTR lpszFunction)
 {
 	LPVOID lpMsgBuf;
 	LPVOID lpDisplayBuf;
@@ -32,35 +39,71 @@ void ErrorExit(LPTSTR lpszFunction)
 	ExitProcess(dw);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+
+/*
+Function:  RegisterWindowClass
+
+Purpose:   Register window class with default parameters
+
+Input:     LPSTR lpszClassName - name of the window class
+WNDPROC lpfnWndProc - pointer to window callback function for message handling
+
+Output:    BOOL - TRUE on success, FALSE on failure
+*/
+BOOL RegisterWindowClass(LPSTR lpszClassName, WNDPROC lpfnWndProc)
 {
-	HWND hMainWnd;
-	LPSTR lpszClassName = "lab1";
-	MSG msg;
 	WNDCLASSEX wc;
 
 	memset(&wc, 0, sizeof(wc));
 	wc.cbSize = sizeof(wc);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WndProc;
-	wc.hInstance = hInstance;
+	wc.hInstance = GetModuleHandle(NULL);
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszClassName = lpszClassName;
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	return RegisterClassEx(&wc);
+}
 
-	if (!RegisterClassEx(&wc))
+/*
+Function:  CreateDefaultWindow
+
+Purpose:   Create window with default parameters
+
+Input:     LPSTR lpszClassName - name of the window class
+LPSTR lpszWindowName - window name
+INT nCmdShow - specifies how the window is to be shown
+
+Output:    BOOL - TRUE on success, FALSE on failure
+*/
+BOOL CreateDefaultWindow(LPSTR lpszClassName, LPSTR lpszWindowName, INT nCmdShow)
+{
+	HWND hMainWnd;
+
+	hMainWnd = CreateWindow(lpszClassName, lpszClassName, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(NULL), 0);
+
+	if (hMainWnd)
+	{
+		ShowWindow(hMainWnd, nCmdShow);
+		UpdateWindow(hMainWnd);
+	}
+
+	return hMainWnd ? 1 : 0;
+}
+
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
+{
+	MSG msg;
+	LPSTR lpszClassName = "lab1";
+
+	if (!RegisterWindowClass(lpszClassName, WndProc))
 		ErrorExit("RegisterClassEx");
 
-	hMainWnd = CreateWindow(lpszClassName, "lab1", WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
-
-	if (!hMainWnd)
+	if (!CreateDefaultWindow(lpszClassName, lpszClassName, nCmdShow))
 		ErrorExit("CreateWindow");
-
-	ShowWindow(hMainWnd, nCmdShow);
-	UpdateWindow(hMainWnd);
 
 	while (GetMessage(&msg, 0, 0, 0))
 	{
