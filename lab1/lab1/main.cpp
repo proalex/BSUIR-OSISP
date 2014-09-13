@@ -2,6 +2,7 @@
 #include <Windowsx.h>
 #include <strsafe.h>
 #include <vector>
+#include "resource.h"
 
 using namespace std;
 
@@ -11,6 +12,12 @@ struct Point
 	int y;
 
 	Point(int _x, int _y) : x(_x), y(_y) {}
+};
+
+enum Tool
+{
+	PEN,
+	LINE
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -78,6 +85,7 @@ BOOL RegisterWindowClass(LPSTR lpszClassName, WNDPROC lpfnWndProc)
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszClassName = lpszClassName;
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
 	return RegisterClassEx(&wc);
 }
 
@@ -131,15 +139,18 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static HDC hDC;
-	static int x, y;
+	static int x, y, xLine, yLine, xLine2, yLine2;
 	static vector<Point> curve;
 	static vector<vector<Point>> curves;
 	static BOOL bTracking;
+	static HMENU hMenu;
+	static Tool currentTool = PEN;
 	vector<Point>::iterator it;
 
 	switch (uMsg)
 	{
 	case WM_CREATE:
+		hMenu = GetMenu(hWnd);
 		hDC = GetDC(hWnd);
 		break;
 	case WM_LBUTTONDOWN:
@@ -147,24 +158,66 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		x = GET_X_LPARAM(lParam);
 		y = GET_Y_LPARAM(lParam);
 		MoveToEx(hDC, x, y, NULL);
-		curve.push_back(Point(x, y));
+
+		switch (currentTool)
+		{
+		case PEN:
+			curve.push_back(Point(x, y));
+			break;
+		case LINE:
+			SetROP2(hDC, R2_NOTXORPEN);
+			xLine = x;
+			yLine = y;
+			xLine2 = x;
+			yLine2 = y;
+			break;
+		}
+
 		break;
 	case WM_LBUTTONUP:
 		if (bTracking)
 		{
 			bTracking = FALSE;
-			curves.push_back(curve);
-			curve.clear();
+
+			switch (currentTool)
+			{
+			case PEN:
+				curves.push_back(curve);
+				curve.clear();
+			case LINE:
+				SetROP2(hDC, R2_COPYPEN);
+				curve.push_back(Point(xLine, yLine));
+				curve.push_back(Point(xLine2, yLine2));
+				curves.push_back(curve);
+				curve.clear();
+				break;
+			}
 		}
+
 		break;
 	case WM_MOUSEMOVE:
 		if (bTracking)
 		{
 			x = GET_X_LPARAM(lParam);
 			y = GET_Y_LPARAM(lParam);
-			LineTo(hDC, x, y);
-			curve.push_back(Point(x, y));
+
+			switch (currentTool)
+			{
+			case PEN:
+				LineTo(hDC, x, y);
+				curve.push_back(Point(x, y));
+				break;
+			case LINE:
+				MoveToEx(hDC, xLine, yLine, NULL);
+				LineTo(hDC, xLine2, yLine2);
+				xLine2 = x;
+				yLine2 = y;
+				MoveToEx(hDC, xLine, yLine, NULL);
+				LineTo(hDC, xLine2, yLine2);
+				break;
+			}
 		}
+
 		break;
 	case WM_PAINT:
 		HDC hdc;
@@ -182,6 +235,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		EndPaint(hWnd, &ps);
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case ID_FILE_EXIT:
+			SendMessage(hWnd, WM_DESTROY, 0, 0);
+			break;
+		case ID_TOOL_PEN:
+			CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_CHECKED);
+			CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+			currentTool = PEN;
+			break;
+		case ID_TOOL_LINE:
+			CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
+			CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_CHECKED);
+			currentTool = LINE;
+			break;
+		case ID_CLEAR:
+			if (!bTracking)
+			{
+				RECT rect;
+
+				for (size_t i = 0; i < curves.size(); i++)
+					curves[i].clear();
+
+				curves.clear();
+				GetClientRect(hWnd, &rect);
+				InvalidateRect(hWnd, &rect, TRUE);
+				UpdateWindow(hWnd);
+			}
+
+			break;
+		}
+	
 		break;
 	case WM_CLOSE:
 		DestroyWindow(hWnd);
