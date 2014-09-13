@@ -1,5 +1,19 @@
 #include <Windows.h>
+#include <Windowsx.h>
 #include <strsafe.h>
+#include <vector>
+
+using namespace std;
+
+struct Point
+{
+	int x;
+	int y;
+
+	Point(int _x, int _y) : x(_x), y(_y) {}
+};
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*
 Function:  ErrorExit
@@ -116,12 +130,64 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static HDC hDC;
+	static int x, y;
+	static vector<Point> curve;
+	static vector<vector<Point>> curves;
+	static BOOL bTracking;
+	vector<Point>::iterator it;
+
 	switch (uMsg)
 	{
+	case WM_CREATE:
+		hDC = GetDC(hWnd);
+		break;
+	case WM_LBUTTONDOWN:
+		bTracking = TRUE;
+		x = GET_X_LPARAM(lParam);
+		y = GET_Y_LPARAM(lParam);
+		MoveToEx(hDC, x, y, NULL);
+		curve.push_back(Point(x, y));
+		break;
+	case WM_LBUTTONUP:
+		if (bTracking)
+		{
+			bTracking = FALSE;
+			curves.push_back(curve);
+			curve.clear();
+		}
+		break;
+	case WM_MOUSEMOVE:
+		if (bTracking)
+		{
+			x = GET_X_LPARAM(lParam);
+			y = GET_Y_LPARAM(lParam);
+			LineTo(hDC, x, y);
+			curve.push_back(Point(x, y));
+		}
+		break;
+	case WM_PAINT:
+		HDC hdc;
+		PAINTSTRUCT ps;
+
+		hdc = BeginPaint(hWnd, &ps);
+
+		for (size_t i = 0; i < curves.size(); i++)
+		{
+			it = curves[i].begin();
+			MoveToEx(hdc, it->x, it->y, NULL);
+
+			for (it + 1; it != curves[i].end(); it++)
+				LineTo(hdc, it->x, it->y);
+		}
+
+		EndPaint(hWnd, &ps);
+		break;
 	case WM_CLOSE:
 		DestroyWindow(hWnd);
 		break;
 	case WM_DESTROY:
+		ReleaseDC(hWnd, hDC);
 		PostQuitMessage(0);
 		break;
 	default:
