@@ -137,11 +137,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
-    static int beginX, beginY, endX, endY, width, height;
+    static int beginX, beginY, endX, endY, width, height, penWidth = 0;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
     static Tool currentTool = PEN;
     static RECT rect;
+    static COLORREF custColors[16];
+    static HPEN hPen;
 
     switch (uMsg)
     {
@@ -158,6 +160,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         tempBMP = CreateCompatibleBitmap(hDC, width, height);
         SelectObject(tempDC, tempBMP);
         PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
+        hPen = GetStockPen(BLACK_PEN);
+        SelectObject(tempDC, hPen);
         break;
     case WM_LBUTTONDOWN:
         bTracking = TRUE;
@@ -226,6 +230,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_CHECKED);
             currentTool = LINE;
             break;
+        case ID_COLOR:
+            CHOOSECOLOR chooseColor;
+
+            chooseColor.lStructSize = sizeof(CHOOSECOLOR);
+            chooseColor.hwndOwner = hWnd;
+            chooseColor.hInstance = 0;
+            chooseColor.rgbResult = 0;
+            chooseColor.lpCustColors = custColors;
+            chooseColor.Flags = CC_RGBINIT | CC_FULLOPEN;
+            chooseColor.lCustData = 0;
+            chooseColor.lpfnHook = 0;
+            chooseColor.lpTemplateName = 0;
+
+            if (ChooseColor(&chooseColor))
+            {
+                hPen = CreatePen(PS_SOLID, penWidth, chooseColor.rgbResult);
+                SelectObject(tempDC, hPen);
+            }
+
+            break;
         case ID_CLEAR:
             if (!bTracking)
             {
@@ -245,6 +269,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         DestroyWindow(hWnd);
         break;
     case WM_DESTROY:
+        DeleteObject(hPen);
         ReleaseDC(hWnd, hDC);
         DeleteDC(bufferedDC);
         PostQuitMessage(0);
