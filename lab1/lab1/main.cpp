@@ -144,6 +144,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     static RECT rect;
     static COLORREF custColors[16];
     static HPEN hPen;
+    static COLORREF color = RGB(0, 0, 0);
 
     switch (uMsg)
     {
@@ -245,6 +246,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             if (ChooseColor(&chooseColor))
             {
+                color = chooseColor.rgbResult;
                 hPen = CreatePen(PS_SOLID, penWidth, chooseColor.rgbResult);
                 SelectObject(tempDC, hPen);
             }
@@ -259,8 +261,75 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 BitBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
                 InvalidateRect(hWnd, &rect, TRUE);
                 UpdateWindow(hWnd);
+                DeleteObject(clearBrush);
             }
 
+            break;
+        case ID_THICKNESS_1:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
+            penWidth = 1;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
+            break;
+        case ID_THICKNESS_2:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
+            penWidth = 2;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
+            break;
+        case ID_THICKNESS_3:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
+            penWidth = 3;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
+            break;
+        case ID_THICKNESS_4:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
+            penWidth = 4;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
+            break;
+        case ID_THICKNESS_5:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
+            penWidth = 5;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
+            break;
+        case ID_THICKNESS_6:
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_2, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_3, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_4, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_5, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_CHECKED);
+            penWidth = 6;
+            hPen = CreatePen(PS_SOLID, penWidth, color);
+            SelectObject(tempDC, hPen);
             break;
         }
     
