@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <Windows.h>
 #include <Windowsx.h>
 #include <strsafe.h>
@@ -137,7 +139,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
-    static int beginX, beginY, endX, endY, width, height, penWidth = 0;
+    static INT beginX, beginY, endX, endY, width, height, penWidth = 0;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
     static Tool currentTool = PEN;
@@ -216,6 +218,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         EndPaint(hWnd, &ps);
         break;
     case WM_COMMAND:
+        if (bTracking)
+            break;
+
         switch (LOWORD(wParam))
         {
         case ID_FILE_EXIT:
@@ -232,38 +237,124 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             currentTool = LINE;
             break;
         case ID_COLOR:
-            CHOOSECOLOR chooseColor;
-
-            chooseColor.lStructSize = sizeof(CHOOSECOLOR);
-            chooseColor.hwndOwner = hWnd;
-            chooseColor.hInstance = 0;
-            chooseColor.rgbResult = 0;
-            chooseColor.lpCustColors = custColors;
-            chooseColor.Flags = CC_RGBINIT | CC_FULLOPEN;
-            chooseColor.lCustData = 0;
-            chooseColor.lpfnHook = 0;
-            chooseColor.lpTemplateName = 0;
-
-            if (ChooseColor(&chooseColor))
             {
-                color = chooseColor.rgbResult;
-                hPen = CreatePen(PS_SOLID, penWidth, chooseColor.rgbResult);
-                SelectObject(tempDC, hPen);
+                CHOOSECOLOR chooseColor;
+
+                chooseColor.lStructSize = sizeof(CHOOSECOLOR);
+                chooseColor.hwndOwner = hWnd;
+                chooseColor.hInstance = NULL;
+                chooseColor.rgbResult = NULL;
+                chooseColor.lpCustColors = custColors;
+                chooseColor.Flags = CC_RGBINIT | CC_FULLOPEN;
+                chooseColor.lCustData = NULL;
+                chooseColor.lpfnHook = NULL;
+                chooseColor.lpTemplateName = NULL;
+
+                if (ChooseColor(&chooseColor))
+                {
+                    color = chooseColor.rgbResult;
+                    hPen = CreatePen(PS_SOLID, penWidth, chooseColor.rgbResult);
+                    SelectObject(tempDC, hPen);
+                }
+            }
+
+            break;
+        case ID_FILE_OPEN:
+            {
+                OPENFILENAME openFileName;
+                char lpszFullPath[MAX_PATH], lpszFileName[MAX_PATH], lpszInitialDir[MAX_PATH];
+                HENHMETAFILE hemf;
+                ENHMETAHEADER emh;
+                RECT emfRect;
+                INT x1, x2, y1, y2;
+
+                ZeroMemory(&openFileName, sizeof(OPENFILENAME));
+                ZeroMemory(&lpszFullPath, sizeof(lpszFullPath));
+                ZeroMemory(&lpszFileName, sizeof(lpszFileName));
+                ZeroMemory(&lpszInitialDir, sizeof(lpszInitialDir));
+                openFileName.lStructSize = sizeof(OPENFILENAME);
+                openFileName.hwndOwner = hWnd;
+                openFileName.hInstance = GetModuleHandle(NULL);
+                openFileName.lpstrFilter = "Metafile (*.emf)\0*.emf\0";
+                openFileName.nFilterIndex = 1;
+                openFileName.lpstrFile = lpszFullPath;
+                openFileName.nMaxFile = sizeof(lpszFullPath);
+                openFileName.lpstrFileTitle = lpszFileName;
+                openFileName.nMaxFileTitle = sizeof(lpszFileName);
+                openFileName.lpstrInitialDir = lpszInitialDir;
+                openFileName.lpstrTitle = "Open file...";
+                openFileName.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
+
+                if (GetOpenFileName(&openFileName))
+                {
+                    hemf = GetEnhMetaFile(lpszFullPath);
+
+                    if (!hemf)
+                        ErrorExit("GetEnhMetaFile");
+
+                    GetEnhMetaFileHeader(hemf, sizeof(ENHMETAHEADER), &emh);
+                    x1 = emh.rclBounds.left;
+                    x2 = emh.rclBounds.right;
+                    y1 = emh.rclBounds.top;
+                    y2 = emh.rclBounds.bottom;
+                    SetRect(&emfRect, x1, y1, x2, y2);
+                    PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
+                    BitBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+                    PlayEnhMetaFile(bufferedDC, hemf, &emfRect);
+                    InvalidateRect(hWnd, &rect, TRUE);
+                    UpdateWindow(hWnd);
+                    DeleteEnhMetaFile(hemf);
+                }
+            }
+
+            break;
+        case ID_FILE_SAVE:
+            {
+                OPENFILENAME openFileName;
+                char lpszFullPath[MAX_PATH], lpszFileName[MAX_PATH], lpszInitialDir[MAX_PATH];
+
+                ZeroMemory(&openFileName, sizeof(OPENFILENAME));
+                ZeroMemory(&lpszFullPath, sizeof(lpszFullPath));
+                ZeroMemory(&lpszFileName, sizeof(lpszFileName));
+                ZeroMemory(&lpszInitialDir, sizeof(lpszInitialDir));
+                openFileName.lStructSize = sizeof(OPENFILENAME);
+                openFileName.hwndOwner = hWnd;
+                openFileName.hInstance = GetModuleHandle(NULL);
+                openFileName.lpstrFilter = "Metafile (*.emf)\0*.emf\0";
+                openFileName.nFilterIndex = 1;
+                openFileName.lpstrFile = lpszFullPath;
+                openFileName.nMaxFile = sizeof(lpszFullPath);
+                openFileName.lpstrFileTitle = lpszFileName;
+                openFileName.nMaxFileTitle = sizeof(lpszFileName);
+                openFileName.lpstrInitialDir = lpszInitialDir;
+                openFileName.lpstrTitle = "Save file As...";
+                openFileName.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+                if (GetSaveFileName(&openFileName))
+                {
+                    HDC metaFile;
+                    INT end = strlen(lpszFullPath);
+                    INT ext = end - 4;
+
+                    if (strcmp(&lpszFullPath[ext], ".emf"))
+                        sprintf(&lpszFullPath[end], "%s", ".emf");
+                    
+                    metaFile = CreateEnhMetaFile(bufferedDC, lpszFullPath, NULL, NULL);
+
+                    if (!metaFile)
+                        ErrorExit("CreateEnhMetaFile");
+
+                    BitBlt(metaFile, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+                    DeleteEnhMetaFile(CloseEnhMetaFile(metaFile));
+                }
             }
 
             break;
         case ID_CLEAR:
-            if (!bTracking)
-            {
-                HBRUSH clearBrush = CreateSolidBrush(RGB(0, 0, 0));
-
-                PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
-                BitBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
-                InvalidateRect(hWnd, &rect, TRUE);
-                UpdateWindow(hWnd);
-                DeleteObject(clearBrush);
-            }
-
+            PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
+            BitBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+            InvalidateRect(hWnd, &rect, TRUE);
+            UpdateWindow(hWnd);
             break;
         case ID_THICKNESS_1:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_CHECKED);
