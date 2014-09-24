@@ -97,9 +97,9 @@ Input:     LPSTR lpszClassName - name of the window class
            LPSTR lpszWindowName - window name
            INT nCmdShow - specifies how the window is to be shown
 
-Output:    BOOL - TRUE on success, FALSE on failure
+Output:    HWND - window handle on success, NULL on failure
 */
-BOOL CreateDefaultWindow(LPSTR lpszClassName, LPSTR lpszWindowName, INT nCmdShow)
+HWND CreateDefaultWindow(LPSTR lpszClassName, LPSTR lpszWindowName, INT nCmdShow)
 {
     HWND hMainWnd;
 
@@ -112,24 +112,34 @@ BOOL CreateDefaultWindow(LPSTR lpszClassName, LPSTR lpszWindowName, INT nCmdShow
         UpdateWindow(hMainWnd);
     }
 
-    return hMainWnd ? 1 : 0;
+    return hMainWnd;
 }
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
 {
     MSG msg;
+    HWND hWnd;
+    HACCEL accelerators;
     LPSTR lpszClassName = "lab1";
 
     if (!RegisterWindowClass(lpszClassName, WndProc))
         ErrorExit("RegisterClassEx");
 
-    if (!CreateDefaultWindow(lpszClassName, lpszClassName, nCmdShow))
+    if (!(hWnd = CreateDefaultWindow(lpszClassName, lpszClassName, nCmdShow)))
         ErrorExit("CreateWindow");
+
+    accelerators = LoadAccelerators(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_ACCELERATOR1));
+
+    if (!accelerators)
+        ErrorExit("LoadAccelerators");
 
     while (GetMessage(&msg, 0, 0, 0))
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAccelerator(hWnd, accelerators, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     return msg.wParam;
