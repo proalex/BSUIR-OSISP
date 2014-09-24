@@ -164,6 +164,9 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         }
 
         break;
+    case WM_CLOSE:
+        EndDialog(hDlg, 0);
+        break;
     }
 
     return FALSE;
