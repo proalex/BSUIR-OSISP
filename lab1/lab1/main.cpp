@@ -16,7 +16,8 @@ struct Point
 enum Tool
 {
     PEN,
-    LINE
+    LINE,
+    ELLIPSE
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -225,6 +226,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 MoveToEx(tempDC, beginX, beginY, NULL);
                 LineTo(tempDC, endX, endY);
                 break;
+            case ELLIPSE:
+                BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+                Ellipse(tempDC, beginX, beginY, endX, endY);
+                break;
             }
 
             InvalidateRect(hWnd, &rect, FALSE);
@@ -257,12 +262,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case ID_TOOL_PEN:
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             currentTool = PEN;
             break;
         case ID_TOOL_LINE:
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             currentTool = LINE;
+            break;
+        case ID_TOOL_ELLIPSE:
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_CHECKED);
+            currentTool = ELLIPSE;
             break;
         case ID_COLOR:
             {
