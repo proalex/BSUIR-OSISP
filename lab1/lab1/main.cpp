@@ -145,6 +145,24 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     return msg.wParam;
 }
 
+INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            EndDialog(hDlg, 0);
+            break;
+        }
+
+        break;
+    }
+
+    return FALSE;
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
@@ -431,6 +449,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             penWidth = 6;
             hPen = CreatePen(PS_SOLID, penWidth, color);
             SelectObject(tempDC, hPen);
+            break;
+        case ID_ABOUT:
+            DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), hWnd, &AboutDlgProc);
             break;
         }
     
