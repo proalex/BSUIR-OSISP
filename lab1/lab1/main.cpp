@@ -3,7 +3,10 @@
 #include <Windows.h>
 #include <Windowsx.h>
 #include <strsafe.h>
+#include <string>
 #include "resource.h"
+
+using namespace std;
 
 struct Point
 {
@@ -18,7 +21,8 @@ enum Tool
     PEN,
     LINE,
     ELLIPSE,
-    RECTANGLE
+    RECTANGLE,
+    TEXT
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -169,7 +173,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
-    static INT beginX, beginY, endX, endY, width, height, penWidth = 0;
+    static INT beginX, beginY, endX, endY, width, height, textX = 0, textY = 0, penWidth = 0;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
     static Tool currentTool = PEN;
@@ -177,6 +181,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     static COLORREF custColors[16];
     static HPEN hPen;
     static COLORREF color = RGB(0, 0, 0);
+    static string text;
 
     switch (uMsg)
     {
@@ -208,6 +213,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (bTracking)
         {
             bTracking = FALSE;
+
+            switch (currentTool)
+            {
+            case TEXT:
+                text.clear();
+                textX = GET_X_LPARAM(lParam);
+                textY = GET_Y_LPARAM(lParam);
+                break;
+            }
+
             BitBlt(bufferedDC, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
         }
 
@@ -270,6 +285,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
             currentTool = PEN;
             break;
         case ID_TOOL_LINE:
@@ -277,6 +293,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
             currentTool = LINE;
             break;
         case ID_TOOL_ELLIPSE:
@@ -284,6 +301,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
             currentTool = ELLIPSE;
             break;
         case ID_TOOL_RECTANGLE:
@@ -291,7 +309,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
             currentTool = RECTANGLE;
+            break;
+        case ID_TOOL_TEXT:
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_CHECKED);
+            textX = 0;
+            textY = 0;
+            text.clear();
+            currentTool = TEXT;
             break;
         case ID_COLOR:
             {
@@ -485,6 +515,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     
         break;
+        case WM_CHAR:
+            if (currentTool == TEXT && textX && textY && bTracking == FALSE)
+            {
+                CHAR ch = (CHAR)wParam;
+
+                if (ch == VK_RETURN)
+                {
+                    textX = 0;
+                    textY = 0;
+                    text.clear();
+                    break;
+                }
+                else if (ch == VK_BACK)
+                    break;
+                else
+                    text += ch;
+
+
+                TextOut(bufferedDC, textX, textY, text.c_str(), strlen(text.c_str()));
+                InvalidateRect(hWnd, NULL, FALSE);
+                UpdateWindow(hWnd);
+            }
+
+            break;
     case WM_CLOSE:
         DestroyWindow(hWnd);
         break;
