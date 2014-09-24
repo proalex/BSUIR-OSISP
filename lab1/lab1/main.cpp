@@ -194,6 +194,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
         hPen = GetStockPen(BLACK_PEN);
         SelectObject(tempDC, hPen);
+        SelectObject(tempDC, GetStockObject(HOLLOW_BRUSH));
         break;
     case WM_LBUTTONDOWN:
         bTracking = TRUE;
