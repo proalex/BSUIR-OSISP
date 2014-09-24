@@ -17,7 +17,8 @@ enum Tool
 {
     PEN,
     LINE,
-    ELLIPSE
+    ELLIPSE,
+    RECTANGLE
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -231,6 +232,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
                 Ellipse(tempDC, beginX, beginY, endX, endY);
                 break;
+            case RECTANGLE:
+                BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+                Rectangle(tempDC, beginX, beginY, endX, endY);
+                break;
             }
 
             InvalidateRect(hWnd, &rect, FALSE);
@@ -264,19 +269,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             currentTool = PEN;
             break;
         case ID_TOOL_LINE:
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             currentTool = LINE;
             break;
         case ID_TOOL_ELLIPSE:
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             currentTool = ELLIPSE;
+            break;
+        case ID_TOOL_RECTANGLE:
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_CHECKED);
+            currentTool = RECTANGLE;
             break;
         case ID_COLOR:
             {
