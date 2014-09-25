@@ -22,7 +22,8 @@ enum Tool
     LINE,
     ELLIPSE,
     RECTANGLE,
-    TEXT
+    TEXT,
+    POLYLINE
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -176,7 +177,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
-    static INT beginX, beginY, endX, endY, width, height, textX = 0, textY = 0, penWidth = 0;
+    static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width, height, textX = 0, textY = 0, penWidth = 0;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
     static Tool currentTool = PEN;
@@ -207,10 +208,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONDOWN:
         bTracking = TRUE;
-        beginX = GET_X_LPARAM(lParam);
-        beginY = GET_Y_LPARAM(lParam);
-        BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
-        MoveToEx(tempDC, beginX, beginY, NULL);
+
+        if (currentTool != POLYLINE || (!beginX && !beginY))
+        {
+            beginX = GET_X_LPARAM(lParam);
+            beginY = GET_Y_LPARAM(lParam);
+            MoveToEx(tempDC, beginX, beginY, NULL);
+            BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+        }
+
         break;
     case WM_LBUTTONUP:
         if (bTracking)
@@ -224,6 +230,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 textX = GET_X_LPARAM(lParam);
                 textY = GET_Y_LPARAM(lParam);
                 break;
+            }
+
+            if (currentTool != POLYLINE)
+            {
+                beginX = 0;
+                beginY = 0;
+                endX = 0;
+                endY = 0;
+            }
+            else
+            {
+                if (endX && endY)
+                {
+                    beginX = endX;
+                    beginY = endY;
+                }
+
+                bTracking = TRUE;
             }
 
             BitBlt(bufferedDC, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
@@ -253,6 +277,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case RECTANGLE:
                 BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
                 Rectangle(tempDC, beginX, beginY, endX, endY);
+                break;
+            case POLYLINE:
+                BitBlt(tempDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+                MoveToEx(tempDC, beginX, beginY, NULL);
+                LineTo(tempDC, endX, endY);
                 break;
             }
 
@@ -289,6 +318,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_UNCHECKED);
             currentTool = PEN;
             break;
         case ID_TOOL_LINE:
@@ -297,6 +327,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_UNCHECKED);
             currentTool = LINE;
             break;
         case ID_TOOL_ELLIPSE:
@@ -305,6 +336,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_UNCHECKED);
             currentTool = ELLIPSE;
             break;
         case ID_TOOL_RECTANGLE:
@@ -313,6 +345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_CHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_UNCHECKED);
             currentTool = RECTANGLE;
             break;
         case ID_TOOL_TEXT:
@@ -321,10 +354,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_CHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_UNCHECKED);
             textX = 0;
             textY = 0;
             text.clear();
             currentTool = TEXT;
+            break;
+        case ID_TOOL_POLYLINE:
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_PEN, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_LINE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_ELLIPSE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_RECTANGLE, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_TEXT, MF_UNCHECKED);
+            CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_CHECKED);
+            currentTool = POLYLINE;
             break;
         case ID_COLOR:
             {
@@ -536,9 +579,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     text += ch;
 
 
-                TextOut(bufferedDC, textX, textY, text.c_str(), strlen(text.c_str()));
+                TextOut(tempDC, textX, textY, text.c_str(), strlen(text.c_str()));
+                BitBlt(bufferedDC, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
                 InvalidateRect(hWnd, NULL, FALSE);
                 UpdateWindow(hWnd);
+            }
+            else if (currentTool == POLYLINE)
+            {
+                CHAR ch = (CHAR)wParam;
+
+                if (ch == VK_ESCAPE)
+                {
+                    bTracking = FALSE;
+                    beginX = 0;
+                    beginY = 0;
+                    endX = 0;
+                    endY = 0;
+                    InvalidateRect(hWnd, NULL, FALSE);
+                    UpdateWindow(hWnd);
+                }
             }
 
             break;
