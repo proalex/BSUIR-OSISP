@@ -178,7 +178,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
     static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width,
-        height, textX = 0, textY = 0, penWidth = 0;
+        height, textX = 0, textY = 0, penWidth = 0, xShift = 0, yShift = 0;
     static DOUBLE zoom = 1;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
@@ -210,6 +210,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONDOWN:
         bTracking = TRUE;
+        zoom = 1;
+        xShift = 0;
+        yShift = 0;
 
         if (currentTool != POLYLINE || (!beginX && !beginY))
         {
@@ -564,7 +567,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         break;
     case WM_MOUSEWHEEL:
-        if (GET_KEYSTATE_WPARAM(wParam) == MK_CONTROL)
+        if (GetKeyState(VK_CONTROL) & 0x8000 && GetKeyState(VK_SHIFT) & 0x8000)
+        {
+            SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+            if (zDelta > 0)
+                xShift += 10;
+            else
+                xShift -= 10;
+
+            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
+        }
+        else if (GetKeyState(VK_SHIFT) & 0x8000)
+        {
+            SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+            if (zDelta > 0)
+                yShift += 10;
+            else
+                yShift -= 10;
+
+            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
+        }
+        else if (GetKeyState(VK_CONTROL) & 0x8000)
         {
             SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 
@@ -573,7 +598,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             else
                 zoom -= 0.1;
 
-            StretchBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
+            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
         }
 
         break;
