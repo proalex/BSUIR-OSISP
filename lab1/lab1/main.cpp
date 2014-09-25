@@ -177,7 +177,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HDC hDC, bufferedDC, tempDC;
     static HBITMAP bufferedBMP, tempBMP;
-    static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width, height, textX = 0, textY = 0, penWidth = 0;
+    static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width,
+        height, textX = 0, textY = 0, penWidth = 0;
+    static DOUBLE zoom = 1;
     static BOOL bTracking = FALSE;
     static HMENU hMenu;
     static Tool currentTool = PEN;
@@ -437,7 +439,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     InvalidateRect(hWnd, &rect, TRUE);
                     UpdateWindow(hWnd);
                     DeleteEnhMetaFile(hemf);
-                }
+                 }
             }
 
             break;
@@ -471,7 +473,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (strcmp(&lpszFullPath[ext], ".emf"))
                         sprintf(&lpszFullPath[end], "%s", ".emf");
-                    
+
                     metaFile = CreateEnhMetaFile(bufferedDC, lpszFullPath, NULL, NULL);
 
                     if (!metaFile)
@@ -559,48 +561,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), hWnd, &AboutDlgProc);
             break;
         }
-    
+
         break;
-        case WM_CHAR:
-            if (currentTool == TEXT && textX && textY && bTracking == FALSE)
+    case WM_MOUSEWHEEL:
+        if (GET_KEYSTATE_WPARAM(wParam) == MK_CONTROL)
+        {
+            SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+            if (zDelta > 0)
+                zoom += 0.1;
+            else
+                zoom -= 0.1;
+
+            StretchBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
+        }
+
+        break;
+    case WM_CHAR:
+        if (currentTool == TEXT && textX && textY && bTracking == FALSE)
+        {
+            CHAR ch = (CHAR)wParam;
+
+            if (ch == VK_RETURN)
             {
-                CHAR ch = (CHAR)wParam;
+                textX = 0;
+                textY = 0;
+                text.clear();
+                break;
+            }
+            else if (ch == VK_BACK)
+                break;
+            else
+                text += ch;
 
-                if (ch == VK_RETURN)
-                {
-                    textX = 0;
-                    textY = 0;
-                    text.clear();
-                    break;
-                }
-                else if (ch == VK_BACK)
-                    break;
-                else
-                    text += ch;
+            TextOut(tempDC, textX, textY, text.c_str(), strlen(text.c_str()));
+            BitBlt(bufferedDC, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
+            InvalidateRect(hWnd, NULL, FALSE);
+            UpdateWindow(hWnd);
+        }
+        else if (currentTool == POLYLINE)
+        {
+            CHAR ch = (CHAR)wParam;
 
-
-                TextOut(tempDC, textX, textY, text.c_str(), strlen(text.c_str()));
-                BitBlt(bufferedDC, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
+            if (ch == VK_ESCAPE)
+            {
+                bTracking = FALSE;
+                beginX = 0;
+                beginY = 0;
+                endX = 0;
+                endY = 0;
                 InvalidateRect(hWnd, NULL, FALSE);
                 UpdateWindow(hWnd);
             }
-            else if (currentTool == POLYLINE)
-            {
-                CHAR ch = (CHAR)wParam;
+        }
 
-                if (ch == VK_ESCAPE)
-                {
-                    bTracking = FALSE;
-                    beginX = 0;
-                    beginY = 0;
-                    endX = 0;
-                    endY = 0;
-                    InvalidateRect(hWnd, NULL, FALSE);
-                    UpdateWindow(hWnd);
-                }
-            }
-
-            break;
+        break;
     case WM_CLOSE:
         DestroyWindow(hWnd);
         break;

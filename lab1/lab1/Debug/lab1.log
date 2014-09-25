@@ -1,4 +1,4 @@
-﻿Build started 25.09.2014 13:47:47.
+﻿Build started 25.09.2014 17:33:12.
      1>Project "D:\C++\BSUIR-OSISP\lab1\lab1\lab1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
@@ -11,4 +11,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:04.86
+Time Elapsed 00:00:05.11
