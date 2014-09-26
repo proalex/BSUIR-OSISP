@@ -488,6 +488,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             break;
+        case ID_FILE_PRINT:
+            PRINTDLG pdlg;
+
+            ZeroMemory(&pdlg, sizeof(PRINTDLG));
+            pdlg.lStructSize = sizeof(pdlg);
+            pdlg.hInstance = GetModuleHandle(NULL);
+            pdlg.hwndOwner = hWnd;
+            pdlg.hDevMode = 0;
+            pdlg.hDevNames = 0;
+            pdlg.Flags = PD_ALLPAGES | PD_NOPAGENUMS | PD_RETURNDC | PD_NOSELECTION | PD_PRINTTOFILE;
+            pdlg.nCopies = 1;
+            pdlg.nMinPage = 1;
+            pdlg.nMaxPage = 1;
+
+            if (PrintDlg(&pdlg))
+            {
+                DOCINFO di;
+                int pX = GetDeviceCaps(pdlg.hDC, HORZRES);
+                int pY = GetDeviceCaps(pdlg.hDC, VERTRES);
+
+
+                ZeroMemory(&di, sizeof(di));
+                di.cbSize = sizeof(DOCINFO);
+                StartDoc(pdlg.hDC, &di);
+                StartPage(pdlg.hDC);
+                StretchBlt(pdlg.hDC, 0, 0, pX, pY / 3, bufferedDC, 0, 0, width, height, SRCCOPY);
+                EndPage(pdlg.hDC);
+                EndDoc(pdlg.hDC);
+                DeleteDC(pdlg.hDC);
+            }
+
+            break;
         case ID_CLEAR:
             PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
             BitBlt(hDC, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
