@@ -210,8 +210,8 @@ VOID DrawClock(HDC hDC, HDC clockDC, HDC tempDC, INT width)
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static HDC hDC, bufferedDC, tempDC, tempDC2, tempDC3, clockDC;
-    static HBITMAP bufferedBMP, tempBMP, tempBMP2, tempBMP3, clockBMP;
+    static HDC hDC, bufferedDC, tempDC, tempDC2, tempDC3, tempDC4, clockDC;
+    static HBITMAP bufferedBMP, tempBMP, tempBMP2, tempBMP3, tempBMP4, clockBMP;
     static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width,
         height, textX = 0, textY = 0, penWidth = 0, xShift = 0, yShift = 0;
     static DOUBLE zoom = 1;
@@ -234,6 +234,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         tempDC = CreateCompatibleDC(hDC);
         tempDC2 = CreateCompatibleDC(hDC);
         tempDC3 = CreateCompatibleDC(hDC);
+        tempDC4 = CreateCompatibleDC(hDC);
         width = rect.right - rect.left;
         height = rect.bottom - rect.top;
         bufferedBMP = CreateCompatibleBitmap(hDC, width, height);
@@ -244,6 +245,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SelectObject(tempDC2, tempBMP2);
         tempBMP3 = CreateCompatibleBitmap(hDC, 330, 360);
         SelectObject(tempDC3, tempBMP3);
+        tempBMP4 = CreateCompatibleBitmap(hDC, width, height);
+        SelectObject(tempDC4, tempBMP4);
         PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
         PatBlt(tempDC2, 0, 0, width, height, WHITENESS);
         hPen = GetStockPen(BLACK_PEN);
@@ -354,7 +357,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         else
             BitBlt(tempDC2, 0, 0, width, height, bufferedDC, 0, 0, SRCAND);
 
-        BitBlt(hdc, 0, 0, width, height, tempDC2, 0, 0, SRCCOPY);
+        PatBlt(tempDC4, 0, 0, width, height, WHITENESS);
+        StretchBlt(tempDC4, 0, 0, width, height, tempDC2, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
+        BitBlt(hdc, 0, 0, width, height, tempDC4, 0, 0, SRCCOPY);
         EndPaint(hWnd, &ps);
         break;
     case WM_COMMAND:
@@ -557,7 +562,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 int pX = GetDeviceCaps(pdlg.hDC, HORZRES);
                 int pY = GetDeviceCaps(pdlg.hDC, VERTRES);
 
-
                 ZeroMemory(&di, sizeof(di));
                 di.cbSize = sizeof(DOCINFO);
                 StartDoc(pdlg.hDC, &di);
@@ -656,8 +660,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 xShift += 10;
             else
                 xShift -= 10;
-
-            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
         }
         else if (GetKeyState(VK_SHIFT) & 0x8000)
         {
@@ -667,8 +669,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 yShift += 10;
             else
                 yShift -= 10;
-
-            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
         }
         else if (GetKeyState(VK_CONTROL) & 0x8000)
         {
@@ -678,10 +678,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 zoom += 0.1;
             else
                 zoom -= 0.1;
-
-            StretchBlt(hDC, 0, 0, width, height, bufferedDC, xShift, yShift, (INT)(width * zoom), (INT)(height * zoom), SRCCOPY);
         }
 
+        InvalidateRect(hWnd, &rect, FALSE);
+        UpdateWindow(hWnd);
         break;
     case WM_CHAR:
         if (currentTool == TEXT && textX && textY && bTracking == FALSE)
@@ -723,7 +723,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         break;
     case WM_TIMER:
-        DrawClock(hDC, clockDC, tempDC3, width);
         InvalidateRect(hWnd, &rect, FALSE);
         UpdateWindow(hWnd);
         break;
@@ -735,6 +734,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         DeleteObject(hPen);
         ReleaseDC(hWnd, hDC);
         DeleteDC(bufferedDC);
+        DeleteDC(tempDC);
+        DeleteDC(tempDC2);
+        DeleteDC(tempDC3);
+        DeleteDC(tempDC4);
         PostQuitMessage(0);
         break;
     default:
