@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\images\clock.bmp" />
+    <Image Include="..\images\logo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

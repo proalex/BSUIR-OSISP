@@ -87,11 +87,10 @@ BOOL RegisterWindowClass(LPSTR lpszClassName, WNDPROC lpfnWndProc)
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandle(NULL);
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wc.lpszClassName = lpszClassName;
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
     return RegisterClassEx(&wc);
 }

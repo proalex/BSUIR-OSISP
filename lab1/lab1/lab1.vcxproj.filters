@@ -33,5 +33,8 @@
     <Image Include="..\images\clock.bmp">
       <Filter>Файлы ресурсов</Filter>
     </Image>
+    <Image Include="..\images\logo.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
   </ItemGroup>
 </Project>
