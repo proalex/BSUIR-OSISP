@@ -27,6 +27,7 @@ enum Tool
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID DrawClock(HDC hDC, HDC clockDC, INT height, INT width);
 
 /*
 Function:  ErrorExit
@@ -173,10 +174,45 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
     return FALSE;
 }
 
+/*
+Function:  DrawClock
+
+Purpose:   Drawing clock to selected device context
+
+Input:     HDC hDC - device context
+           HDC clockDC - device context that store clock image
+           HDC tempDC - device context for drawing arrows
+           INT width - width of window
+
+Output:    VOID
+*/
+
+VOID DrawClock(HDC hDC, HDC clockDC, HDC tempDC, INT width)
+{
+    SYSTEMTIME time;
+    int iHeight = GetDeviceCaps(clockDC, HORZRES);
+    int iWidth = GetDeviceCaps(clockDC, VERTRES);
+    HPEN pen;
+
+    GetLocalTime(&time);
+    BitBlt(tempDC, 0, 0, iHeight, iWidth, clockDC, 0, 0, SRCCOPY);
+    pen = CreatePen(PS_SOLID, 4, RGB(0, 0, 0));
+    DeleteObject(SelectObject(tempDC, pen));
+    MoveToEx(tempDC, 170, 180, 0);
+    LineTo(tempDC, (INT)(170 + 150 * sin(3.14F / 30 * time.wMinute)), (INT)(180 - 150 * cos(3.14F / 30 * time.wMinute)));
+    MoveToEx(tempDC, 170, 180, 0);
+    LineTo(tempDC, (INT)(170 + 75 * sin(3.14F / 6 * time.wHour)), (INT)(180 - 75 * cos(3.14F / 6 * time.wHour)));
+    pen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    DeleteObject(SelectObject(tempDC, pen));
+    MoveToEx(tempDC, 170, 180, 0);
+    LineTo(tempDC, (INT)(170 + 150 * sin(3.14F / 30 * time.wSecond)), (INT)(180 - 150 * cos(3.14F / 30 * time.wSecond)));
+    StretchBlt(hDC, width / 4 * 3 + width / 12, 0, iHeight / 2, iWidth / 2, tempDC, 0, 0, iHeight, iWidth, SRCCOPY);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static HDC hDC, bufferedDC, tempDC;
-    static HBITMAP bufferedBMP, tempBMP;
+    static HDC hDC, bufferedDC, tempDC, tempDC2, tempDC3, clockDC;
+    static HBITMAP bufferedBMP, tempBMP, tempBMP2, tempBMP3, clockBMP;
     static INT beginX = 0, beginY = 0, endX = 0, endY = 0, width,
         height, textX = 0, textY = 0, penWidth = 0, xShift = 0, yShift = 0;
     static DOUBLE zoom = 1;
@@ -197,16 +233,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         GetClientRect(hWnd, &rect);
         bufferedDC = CreateCompatibleDC(hDC);
         tempDC = CreateCompatibleDC(hDC);
+        tempDC2 = CreateCompatibleDC(hDC);
+        tempDC3 = CreateCompatibleDC(hDC);
         width = rect.right - rect.left;
         height = rect.bottom - rect.top;
         bufferedBMP = CreateCompatibleBitmap(hDC, width, height);
         SelectObject(bufferedDC, bufferedBMP);
         tempBMP = CreateCompatibleBitmap(hDC, width, height);
         SelectObject(tempDC, tempBMP);
+        tempBMP2 = CreateCompatibleBitmap(hDC, width, height);
+        SelectObject(tempDC2, tempBMP2);
+        tempBMP3 = CreateCompatibleBitmap(hDC, 330, 360);
+        SelectObject(tempDC3, tempBMP3);
         PatBlt(bufferedDC, 0, 0, width, height, WHITENESS);
+        PatBlt(tempDC2, 0, 0, width, height, WHITENESS);
         hPen = GetStockPen(BLACK_PEN);
         SelectObject(tempDC, hPen);
         SelectObject(tempDC, GetStockObject(HOLLOW_BRUSH));
+        clockDC = CreateCompatibleDC(hDC);
+        clockBMP = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP1));
+        SelectObject(clockDC, clockBMP);
+        SetTimer(hWnd, 1, 1000, 0);
         break;
     case WM_LBUTTONDOWN:
         bTracking = TRUE;
@@ -300,12 +347,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
 
         hdc = BeginPaint(hWnd, &ps);
+        PatBlt(tempDC2, 0, 0, width, height, WHITENESS);
+        DrawClock(tempDC2, clockDC, tempDC3, width);
 
         if (bTracking)
-            BitBlt(hdc, 0, 0, width, height, tempDC, 0, 0, SRCCOPY);
+            BitBlt(tempDC2, 0, 0, width, height, tempDC, 0, 0, SRCAND);
         else
-            BitBlt(hdc, 0, 0, width, height, bufferedDC, 0, 0, SRCCOPY);
+            BitBlt(tempDC2, 0, 0, width, height, bufferedDC, 0, 0, SRCAND);
 
+        BitBlt(hdc, 0, 0, width, height, tempDC2, 0, 0, SRCCOPY);
         EndPaint(hWnd, &ps);
         break;
     case WM_COMMAND:
@@ -392,7 +442,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     color = chooseColor.rgbResult;
                     hPen = CreatePen(PS_SOLID, penWidth, chooseColor.rgbResult);
-                    SelectObject(tempDC, hPen);
+                    DeleteObject(SelectObject(tempDC, hPen));
                 }
             }
 
@@ -535,7 +585,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
             penWidth = 1;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_THICKNESS_2:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
@@ -546,7 +596,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
             penWidth = 2;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_THICKNESS_3:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
@@ -557,7 +607,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
             penWidth = 3;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_THICKNESS_4:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
@@ -568,7 +618,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
             penWidth = 4;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_THICKNESS_5:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
@@ -579,7 +629,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_UNCHECKED);
             penWidth = 5;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_THICKNESS_6:
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_1, MF_UNCHECKED);
@@ -590,7 +640,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 3), ID_THICKNESS_6, MF_CHECKED);
             penWidth = 6;
             hPen = CreatePen(PS_SOLID, penWidth, color);
-            SelectObject(tempDC, hPen);
+            DeleteObject(SelectObject(tempDC, hPen));
             break;
         case ID_ABOUT:
             DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), hWnd, &AboutDlgProc);
@@ -673,10 +723,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         break;
+    case WM_TIMER:
+        DrawClock(hDC, clockDC, tempDC3, width);
+        InvalidateRect(hWnd, &rect, FALSE);
+        UpdateWindow(hWnd);
+        break;
     case WM_CLOSE:
         DestroyWindow(hWnd);
         break;
     case WM_DESTROY:
+        KillTimer(hWnd, 1);
         DeleteObject(hPen);
         ReleaseDC(hWnd, hDC);
         DeleteDC(bufferedDC);

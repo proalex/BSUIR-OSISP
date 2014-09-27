@@ -30,7 +30,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\logo.jpg">
+    <Image Include="..\images\clock.bmp">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>
