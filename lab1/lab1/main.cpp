@@ -200,7 +200,8 @@ VOID DrawClock(HDC hDC, HDC clockDC, HDC tempDC, INT width)
     MoveToEx(tempDC, 170, 180, 0);
     LineTo(tempDC, (INT)(170 + 150 * sin(3.14F / 30 * time.wMinute)), (INT)(180 - 150 * cos(3.14F / 30 * time.wMinute)));
     MoveToEx(tempDC, 170, 180, 0);
-    LineTo(tempDC, (INT)(170 + 75 * sin(3.14F / 6 * time.wHour)), (INT)(180 - 75 * cos(3.14F / 6 * time.wHour)));
+    LineTo(tempDC, (INT)(170 + 75 * sin(3.14F / 6 * time.wHour + 3.14F / 30 * (time.wMinute / 12))),
+        (INT)(180 - 75 * cos(3.14F / 6 * time.wHour + 3.14F / 30 * (time.wMinute / 12))));
     pen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
     DeleteObject(SelectObject(tempDC, pen));
     MoveToEx(tempDC, 170, 180, 0);
