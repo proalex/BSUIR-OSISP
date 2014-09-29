@@ -8,14 +8,6 @@
 
 using namespace std;
 
-struct Point
-{
-    int x;
-    int y;
-
-    Point(int _x, int _y) : x(_x), y(_y) {}
-};
-
 enum Tool
 {
     PEN,
@@ -224,6 +216,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     static HPEN hPen;
     static COLORREF color = RGB(0, 0, 0);
     static string text;
+    static HBRUSH hBrush;
 
     switch (uMsg)
     {
@@ -429,7 +422,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetSubMenu(hMenu, 1), ID_TOOL_POLYLINE, MF_CHECKED);
             currentTool = POLYLINE;
             break;
-        case ID_COLOR:
+        case ID_PEN:
             {
                 CHOOSECOLOR chooseColor;
 
@@ -451,6 +444,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
 
+            break;
+        case ID_BRUSH_COLOR:
+            {
+                CHOOSECOLOR chooseColor;
+
+                chooseColor.lStructSize = sizeof(CHOOSECOLOR);
+                chooseColor.hwndOwner = hWnd;
+                chooseColor.hInstance = NULL;
+                chooseColor.rgbResult = NULL;
+                chooseColor.lpCustColors = custColors;
+                chooseColor.Flags = CC_RGBINIT | CC_FULLOPEN;
+                chooseColor.lCustData = NULL;
+                chooseColor.lpfnHook = NULL;
+                chooseColor.lpTemplateName = NULL;
+
+                if (ChooseColor(&chooseColor))
+                {
+                    color = chooseColor.rgbResult;
+                    hBrush = CreateSolidBrush(chooseColor.rgbResult);
+                    DeleteObject(SelectObject(tempDC, hBrush));
+                }
+            }
+
+            break;
+        case ID_BRUSH_CLEAR:
+            DeleteObject(SelectObject(tempDC, GetStockObject(HOLLOW_BRUSH)));
             break;
         case ID_FILE_OPEN:
             {
