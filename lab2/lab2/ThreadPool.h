@@ -9,12 +9,14 @@ using namespace std;
 class ThreadPool
 {
 protected:
-	INT threadsCount;
-	ifstream logFile;
+	INT nThreadsCount;
+	BOOL bError = FALSE;
+	ofstream& logFile;
 	vector <HANDLE> threadList;
 	vector <Task> taskList;
 public:
-	ThreadPool(INT threadsCount, ifstream logFile);
-	INT AddTask(Task task);
-	VOID SetPriority(INT threadIndex, INT priority);
+	ThreadPool(INT nThreadsCount, ofstream& logFile);
+	VOID AddTask(Task task);
+	BOOL SetPriority(INT nThreadIndex, INT nPriority);
+	BOOL CheckForErrors() { return bError; }
 };

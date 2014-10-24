@@ -14,9 +14,10 @@ private:
 	LPVOID pFunction;
 	LPVOID pArgs;
 	TaskState taskState;
-	INT threadIndex = 0;
 
 public:
+	INT threadIndex = 0;
+
 	Task(LPVOID pFunction, LPVOID pArgs) : pFunction(pFunction), pArgs(pArgs)
 	{
 		taskState = STATE_QUEUE;
@@ -35,10 +36,5 @@ public:
 	TaskState GetTaskState()
 	{
 		return taskState;
-	}
-
-	INT GetThreadIndex()
-	{
-		return threadIndex;
 	}
 };
