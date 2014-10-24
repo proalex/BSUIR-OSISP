@@ -10,7 +10,6 @@ ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
 		
 		if (hThreadHandle == NULL)
 		{
-			bError = true;
 			logFile << "Failed to create thread. Index: " << i << " Error: %ul" << GetLastError() << "." << endl;
 			bError = TRUE;
 			break;
