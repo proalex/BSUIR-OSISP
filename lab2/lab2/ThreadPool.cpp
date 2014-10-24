@@ -6,7 +6,8 @@ ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
 {
 	for (auto i = 0; i < nThreadsCount; i++)
 	{
-		HANDLE hThreadHandle = CreateThread(0, 0, ThreadEntryPoint, &i, 0, 0);
+		ThreadArgs args(i, this);
+		HANDLE hThreadHandle = CreateThread(0, 0, ThreadEntryPoint, &args, 0, 0);
 		
 		if (hThreadHandle == NULL)
 		{
