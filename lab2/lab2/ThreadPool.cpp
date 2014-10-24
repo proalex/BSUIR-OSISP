@@ -21,6 +21,20 @@ ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
 	}
 }
 
+ThreadPool::~ThreadPool()
+{
+	logFile << "Closing thread pool..." << endl;
+
+	for (auto i = 0; i < nThreadsCount; i++)
+	{
+		logFile << "Closing thread with index " << i << "..." << endl;
+		TerminateThread(threadList[i], 0);
+		CloseHandle(threadList[i]);
+	}
+
+	logFile << "Thread pool closed." << endl;
+}
+
 VOID ThreadPool::AddTask(Task task)
 {
 	logFile << "Adding new task in queue..." << endl;

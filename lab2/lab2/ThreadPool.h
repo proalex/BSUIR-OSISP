@@ -16,6 +16,7 @@ protected:
 	vector <Task> taskList;
 public:
 	ThreadPool(INT nThreadsCount, ofstream& logFile);
+	~ThreadPool();
 	VOID AddTask(Task task);
 	BOOL SetPriority(INT nThreadIndex, INT nPriority);
 	BOOL CheckForErrors() { return bError; }
