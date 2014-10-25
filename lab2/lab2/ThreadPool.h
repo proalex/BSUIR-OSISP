@@ -10,6 +10,7 @@ class ThreadPool
 {
 protected:
 	INT nThreadsCount;
+	INT nFreeThreads;
 	BOOL bError = FALSE;
 	ofstream& logFile;
 	vector <HANDLE> threadList;

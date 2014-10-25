@@ -13,10 +13,11 @@ class Task
 private:
 	LPVOID pFunction;
 	LPVOID pArgs;
-	TaskState taskState;
 
 public:
 	INT threadIndex = 0;
+	DWORD returnValue;
+	TaskState taskState;
 
 	Task(LPVOID pFunction, LPVOID pArgs) : pFunction(pFunction), pArgs(pArgs)
 	{
@@ -31,10 +32,5 @@ public:
 	LPVOID GetArgs()
 	{
 		return pArgs;
-	}
-
-	TaskState GetTaskState()
-	{
-		return taskState;
 	}
 };

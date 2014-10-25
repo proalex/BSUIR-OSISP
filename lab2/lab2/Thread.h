@@ -6,9 +6,9 @@ struct ThreadArgs
 {
 public:
 	INT threadIndex;
-	ThreadPool *pool;
+	ThreadPool *threadPool;
 
-	ThreadArgs(INT threadIndex, ThreadPool *pool) : threadIndex(threadIndex), pool(pool) {}
+	ThreadArgs(INT threadIndex, ThreadPool *threadPool) : threadIndex(threadIndex), threadPool(threadPool) {}
 };
 
 DWORD WINAPI ThreadEntryPoint(LPVOID lpParam);

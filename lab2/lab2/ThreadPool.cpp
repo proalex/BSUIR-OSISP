@@ -2,7 +2,7 @@
 #include "Thread.h"
 
 ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
-	: nThreadsCount(nThreadsCount), logFile(logFile)
+	: nThreadsCount(nThreadsCount), logFile(logFile), nFreeThreads(nThreadsCount)
 {
 	for (auto i = 0; i < nThreadsCount; i++)
 	{
@@ -37,6 +37,13 @@ ThreadPool::~ThreadPool()
 
 VOID ThreadPool::AddTask(Task task)
 {
+	if (!nFreeThreads)
+	{
+		logFile << "Failed to add new task: there are no free threads." << endl;
+		task.taskState = STATE_INVALID;
+		return;
+	}
+
 	logFile << "Adding new task in queue..." << endl;
 	taskList.push_back(task);
 }
