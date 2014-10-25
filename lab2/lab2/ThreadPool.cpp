@@ -4,6 +4,8 @@
 ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
 	: nThreadsCount(nThreadsCount), logFile(logFile), nFreeThreads(nThreadsCount)
 {
+	InitializeCriticalSection(&taskQueue);
+
 	for (auto i = 0; i < nThreadsCount; i++)
 	{
 		ThreadArgs args(i, this);
@@ -24,14 +26,21 @@ ThreadPool::ThreadPool(INT nThreadsCount, ofstream& logFile)
 ThreadPool::~ThreadPool()
 {
 	logFile << "Closing thread pool..." << endl;
+	bSuspend = true;
+	Sleep(100);
 
 	for (auto i = 0; i < nThreadsCount; i++)
 	{
-		logFile << "Closing thread with index " << i << "..." << endl;
-		TerminateThread(threadList[i], 0);
+		if (WaitForSingleObject(threadList[i], 0) == WAIT_OBJECT_0)
+		{
+			logFile << "Terminating thread with index " << i << "..." << endl;
+			TerminateThread(threadList[i], 0);
+		}
+
 		CloseHandle(threadList[i]);
 	}
 
+	DeleteCriticalSection(&taskQueue);
 	logFile << "Thread pool closed." << endl;
 }
 
@@ -59,4 +68,16 @@ BOOL ThreadPool::SetPriority(INT nThreadIndex, INT nPriority)
 		logFile << "Failed to set priority " << nPriority << "for thread with index " << nThreadIndex << "." << endl;
 
 	return bResult;
+}
+
+VOID ThreadPool::WriteLog(string data)
+{
+	logFile << data.data() << endl;
+}
+
+Task ThreadPool::GetNextTask()
+{
+	Task task = taskList.back();
+	taskList.pop_back();
+	return task;
 }

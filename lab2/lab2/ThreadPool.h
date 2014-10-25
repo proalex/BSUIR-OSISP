@@ -10,15 +10,22 @@ class ThreadPool
 {
 protected:
 	INT nThreadsCount;
-	INT nFreeThreads;
 	BOOL bError = FALSE;
+	BOOL bSuspend = FALSE;
 	ofstream& logFile;
 	vector <HANDLE> threadList;
 	vector <Task> taskList;
 public:
+	CRITICAL_SECTION taskQueue;
+	volatile long nFreeThreads;
+
 	ThreadPool(INT nThreadsCount, ofstream& logFile);
 	~ThreadPool();
 	VOID AddTask(Task task);
 	BOOL SetPriority(INT nThreadIndex, INT nPriority);
 	BOOL CheckForErrors() { return bError; }
+	BOOL WaitForTask() { return !bSuspend; }
+	VOID WriteLog(string data);
+	Task GetNextTask();
+	BOOL IsSomethingInQueue() { return taskList.size(); }
 };
