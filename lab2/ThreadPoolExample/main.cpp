@@ -22,6 +22,13 @@ int main()
     logFile.open("ThreadPool.log");
     ThreadPool *threadPool = new ThreadPool(threadsCount, logFile);
     vector<Task*> taskList;
+
+    if (threadPool->CheckForErrors())
+    {
+        delete threadPool;
+        delete args;
+        return 0;
+    }
     
     for (auto i = 0; i < threadsCount; i++)
     {
