@@ -2,44 +2,44 @@
 
 Task::Task(LPVOID pFunction, LPVOID pArgs) : pFunction(pFunction), pArgs(pArgs)
 {
-	state = STATE_QUEUE;
+    state = STATE_QUEUE;
 }
 
 BOOL Task::WaitForRun()
 {
-	if (state == STATE_INVALID)
-		return FALSE;
+    if (state == STATE_INVALID)
+        return FALSE;
 
-	switch (state)
-	{
-	case STATE_INVALID:
-		return FALSE;
-	case STATE_COMPLETED:
-	case STATE_RUNNING:
-		return TRUE;
-	}
+    switch (state)
+    {
+    case STATE_INVALID:
+        return FALSE;
+    case STATE_COMPLETED:
+    case STATE_RUNNING:
+        return TRUE;
+    }
 
-	while (state != STATE_RUNNING && state != STATE_COMPLETED && state != STATE_INVALID)
-		Sleep(10);
+    while (state != STATE_RUNNING && state != STATE_COMPLETED && state != STATE_INVALID)
+        Sleep(10);
 
-	return TRUE;
+    return TRUE;
 }
 
 VOID Task::WaitForComplete()
 {
-	switch (state)
-	{
-	case STATE_INVALID:
-	case STATE_COMPLETED:
-		return;
-	}
+    switch (state)
+    {
+    case STATE_INVALID:
+    case STATE_COMPLETED:
+        return;
+    }
 
-	while (state != STATE_COMPLETED && state != STATE_INVALID)
-		Sleep(10);
+    while (state != STATE_COMPLETED && state != STATE_INVALID)
+        Sleep(10);
 }
 
 VOID Task::SetState(TaskState state)
 {
-	this->state = state;
+    this->state = state;
 }
 

@@ -6,10 +6,10 @@
 struct ThreadArgs
 {
 public:
-	INT threadIndex;
-	ThreadPool *threadPool;
+    INT threadIndex;
+    ThreadPool *threadPool;
 
-	ThreadArgs(INT threadIndex, ThreadPool *threadPool) : threadIndex(threadIndex), threadPool(threadPool) {}
+    ThreadArgs(INT threadIndex, ThreadPool *threadPool) : threadIndex(threadIndex), threadPool(threadPool) {}
 };
 
 DWORD WINAPI ThreadEntryPoint(LPVOID lpParam);
