@@ -1,0 +1,33 @@
+Thread with index 0 was successfully created.
+Thread with index 1 was successfully created.
+Thread with index 2 was successfully created.
+Thread with index 3 was successfully created.
+Thread with index 4 was successfully created.
+Adding new task in queue...
+Adding new task in queue...
+Adding new task in queue...
+Adding new task in queue...
+Adding new task in queue...
+Thread with index 3 have got new task.
+Thread with index 4 have got new task.
+Thread with index 2 have got new task.
+Thread with index 0 have got new task.
+Thread with index 1 have got new task.
+Thread with index 1 have done the task. Return value: 0
+Setting priority 0 for thread with index 1.
+Setting priority 0 for thread with index 0.
+Setting priority 0 for thread with index 2.
+Setting priority 0 for thread with index 4.
+Setting priority 0 for thread with index 3.
+Thread with index 0 have done the task. Return value: 1
+Thread with index 2 have done the task. Return value: 2
+Thread with index 4 have done the task. Return value: 3
+Thread with index 3 have done the task. Return value: 4
+Telling to all threads to suspend...
+Thread with index 0 was successfully closed.
+Thread with index 1 was successfully closed.
+Thread with index 2 was successfully closed.
+Thread with index 3 was successfully closed.
+Thread with index 4 was successfully closed.
+Closing thread pool...
+Thread pool closed.

@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lab2", "lab2\lab2.vcxproj", "{92059A1D-3FDB-41D9-8C99-5C560803A179}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadPoolLibrary", "lab2\lab2.vcxproj", "{92059A1D-3FDB-41D9-8C99-5C560803A179}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadPoolExample", "ThreadPoolExample\ThreadPoolExample.vcxproj", "{AE1F6F51-A00C-4040-94A9-BD761E4A709B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{92059A1D-3FDB-41D9-8C99-5C560803A179}.Debug|Win32.Build.0 = Debug|Win32
 		{92059A1D-3FDB-41D9-8C99-5C560803A179}.Release|Win32.ActiveCfg = Release|Win32
 		{92059A1D-3FDB-41D9-8C99-5C560803A179}.Release|Win32.Build.0 = Release|Win32
+		{AE1F6F51-A00C-4040-94A9-BD761E4A709B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE1F6F51-A00C-4040-94A9-BD761E4A709B}.Debug|Win32.Build.0 = Debug|Win32
+		{AE1F6F51-A00C-4040-94A9-BD761E4A709B}.Release|Win32.ActiveCfg = Release|Win32
+		{AE1F6F51-A00C-4040-94A9-BD761E4A709B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

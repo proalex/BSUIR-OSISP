@@ -14,21 +14,19 @@ DWORD WINAPI ThreadEntryPoint(LPVOID lpParam)
 
 		if (threadPool->IsSomethingInQueue())
 		{
-			Task task = threadPool->GetNextTask();
-			LeaveCriticalSection(&threadPool->taskQueue);
+			Task *task = threadPool->GetNextTask();
 			InterlockedDecrement(&threadPool->nFreeThreads);
-			task.threadIndex = threadIndex;
-			task.taskState = STATE_RUNNING;
-			string logMessage = "Thread with index " + threadIndex;
-			logMessage += " have got new task.";
-			threadPool->WriteLog(logMessage);
-			Job *job = (Job*)(task.GetFunction());
-			task.returnValue = job(task.GetArgs());
+			task->threadIndex = threadIndex;
+			threadPool->logFile << "Thread with index " << threadIndex
+				<< " have got new task." << endl;
+			LeaveCriticalSection(&threadPool->taskQueue);
+			task->SetState(STATE_RUNNING);
+			Job *job = (Job*)task->GetFunction();
+			task->returnValue = job(task->GetArgs());
 			InterlockedIncrement(&threadPool->nFreeThreads);
-			logMessage = "Thread with index " + threadIndex;
-			logMessage += " have done the task. Return value: " + task.returnValue;
-			threadPool->WriteLog(logMessage);
-			task.taskState = STATE_COMPLETED;
+			threadPool->logFile << "Thread with index " << threadIndex
+				<< " have done the task. Return value: " << task->returnValue << endl;
+			task->SetState(STATE_COMPLETED);
 		}
 		else
 		{
@@ -37,8 +35,6 @@ DWORD WINAPI ThreadEntryPoint(LPVOID lpParam)
 		}
 	}
 
-	string logMessage = "Thread with index " + threadIndex;
-	logMessage += " was successfully closed.";
-	threadPool->WriteLog(logMessage);
+	delete args;
 	return 0;
 }

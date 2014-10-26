@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Windows.h>
 #include <fstream>
 #include <vector>
@@ -12,20 +13,20 @@ protected:
 	INT nThreadsCount;
 	BOOL bError = FALSE;
 	BOOL bSuspend = FALSE;
-	ofstream& logFile;
 	vector <HANDLE> threadList;
-	vector <Task> taskList;
+	vector <Task*> taskList;
 public:
 	CRITICAL_SECTION taskQueue;
 	volatile long nFreeThreads;
+	ofstream& logFile;
 
 	ThreadPool(INT nThreadsCount, ofstream& logFile);
 	~ThreadPool();
-	VOID AddTask(Task task);
+	VOID AddTask(Task *task);
 	BOOL SetPriority(INT nThreadIndex, INT nPriority);
 	BOOL CheckForErrors() { return bError; }
 	BOOL WaitForTask() { return !bSuspend; }
-	VOID WriteLog(string data);
-	Task GetNextTask();
+	Task *GetNextTask();
 	BOOL IsSomethingInQueue() { return taskList.size(); }
+	VOID SuspendThreads(DWORD dwMilliseconds);
 };

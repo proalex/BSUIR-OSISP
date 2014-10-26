@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Windows.h>
 
 enum TaskState
@@ -13,24 +15,15 @@ class Task
 private:
 	LPVOID pFunction;
 	LPVOID pArgs;
-
+	TaskState state;
 public:
 	INT threadIndex = 0;
 	DWORD returnValue;
-	TaskState taskState;
 
-	Task(LPVOID pFunction, LPVOID pArgs) : pFunction(pFunction), pArgs(pArgs)
-	{
-		taskState = STATE_QUEUE;
-	}
-
-	LPVOID GetFunction()
-	{
-		return pFunction;
-	}
-
-	LPVOID GetArgs()
-	{
-		return pArgs;
-	}
+	Task(LPVOID pFunction, LPVOID pArgs);
+	LPVOID GetFunction() { return pFunction; }
+	LPVOID GetArgs() { return pArgs; }
+	VOID SetState(TaskState state);
+	BOOL WaitForRun();
+	VOID WaitForComplete();
 };
