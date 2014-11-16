@@ -8,7 +8,7 @@
 int main()
 {
     HANDLE hMutex;
-    LPCSTR pBuffer;
+    LPSTR pBuffer;
     HANDLE hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, NULL, BUFFER_SIZE, BUFFER_NAME);
 
     if (!hMapFile)
@@ -17,7 +17,7 @@ int main()
         return 1;
     }
 
-    pBuffer = (LPCSTR)MapViewOfFile(hMapFile, FILE_MAP_WRITE, NULL, NULL, BUFFER_SIZE);
+    pBuffer = (LPSTR)MapViewOfFile(hMapFile, FILE_MAP_WRITE, NULL, NULL, BUFFER_SIZE);
 
     if (!pBuffer)
     {
@@ -27,6 +27,7 @@ int main()
     }
 
     CloseHandle(hMapFile);
+    memset((LPVOID)pBuffer, 0, BUFFER_SIZE);
     hMutex = CreateMutex(NULL, TRUE, MUTEX_NAME);
 
     if (!hMutex)
