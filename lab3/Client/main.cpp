@@ -2,14 +2,14 @@
 #include <stdio.h>
 
 #define BUFFER_SIZE 256
-#define BUFFER_NAME "Global\\lab3"
-#define MUTEX_NAME "Global\\lab3"
+#define BUFFER_NAME "Global\\Lab3"
+#define MUTEX_NAME "Global\\Lab3Mutex"
 
 int main()
 {
     HANDLE hMutex;
     LPSTR pBuffer;
-    HANDLE hMapFile = OpenFileMapping(PAGE_READWRITE, FALSE, BUFFER_NAME);
+    HANDLE hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, BUFFER_NAME);
 
     if (!hMapFile)
     {
@@ -26,7 +26,6 @@ int main()
         return 1;
     }
 
-    CloseHandle(hMapFile);
     hMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, MUTEX_NAME);
 
     if (!hMutex)
@@ -36,8 +35,9 @@ int main()
         return 1;
     }
 
-    while (strcmp(pBuffer, "exit"))
+    while (strcmp(pBuffer, "exit\n"))
     {
+        WaitForSingleObject(hMutex, INFINITE);
         printf(">");
         fflush(stdin);
         fgets(pBuffer, BUFFER_SIZE, stdin);
@@ -45,6 +45,7 @@ int main()
     }
 
     UnmapViewOfFile(pBuffer);
+    CloseHandle(hMapFile);
     CloseHandle(hMutex);
     return 0;
 }
