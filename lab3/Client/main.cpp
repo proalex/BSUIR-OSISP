@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #define BUFFER_SIZE 256
-#define BUFFER_NAME "lab3"
+#define BUFFER_NAME "Global\\lab3"
 #define MUTEX_NAME "Global\\lab3"
 
 int main()
