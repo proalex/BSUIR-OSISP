@@ -14,7 +14,6 @@ int main()
     if (!hMapFile)
     {
         printf("Could not open file mapping object (%d).\n", GetLastError());
-        getchar();
         return 1;
     }
 
@@ -24,7 +23,6 @@ int main()
     {
         printf("Could not map view of file (%d).\n", GetLastError());
         CloseHandle(hMapFile);
-        getchar();
         return 1;
     }
 
@@ -35,7 +33,6 @@ int main()
     {
         printf("Could not open mutex object (%d).\n", GetLastError());
         UnmapViewOfFile(pBuffer);
-        getchar();
         return 1;
     }
 
